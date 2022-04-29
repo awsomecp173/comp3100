@@ -1,3 +1,6 @@
+//COMP3100 Stage 1 By Andrew Tjandra
+//Student ID: 46451242
+
 import java.net.*;
 import java.io.*;
 
@@ -5,9 +8,9 @@ public class client {
 public static void main (String args[]) {
 // arguments supply message and hostname of destination
 try{
-	Socket s = new Socket("127.0.0.1", 50000); 
+	Socket s = new Socket("127.0.0.1", 50000); // default port of ds-server is 5000
 
-	DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+	DataOutputStream dout = new DataOutputStream(s.getOutputStream()); // Must write newline to every dataoutputstream
 	BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
 
 	dout.write(("HELO\n").getBytes());
@@ -16,8 +19,8 @@ try{
 	String str = (String) din.readLine();
 	System.out.println("RCVD: " +str);
 
-	dout.write(("AUTH wharever \n").getBytes()); 
-	System.out.println("SENT: AUTH "+ System.getProperty("user.name"));
+    dout.write(("AUTH " + System.getProperty("user.name")+ "\n").getBytes());
+    System.out.println("SENT: AUTH "+ System.getProperty("user.name"));
 
 	str = (String) din.readLine(); 
 	System.out.println("RCVD: " +str);
@@ -28,11 +31,8 @@ try{
 	str = (String) din.readLine();
 	System.out.println("RCVD: " +str); // End of Three-way handshake, receiving the job
 
+	String[] jobInfo = str.split(" "); // Store first Job
 
-	String[] jobInfo = str.split(" ");
-
-	
-	int jobID = Integer.parseInt(jobInfo[2]);
 
 	dout.write(("GETS All\n").getBytes());
 	System.out.println("SENT: GETS All");
@@ -42,7 +42,7 @@ try{
 
 	int serverNRecs = Integer.parseInt(str.split(" ")[1]);
 
-
+	
 	dout.write(("OK\n").getBytes());
 	System.out.println("SENT: OK");
 
@@ -53,7 +53,7 @@ try{
 
 	int nServerCount = 0;
 
-	for (int i = 0; i < serverNRecs; i++) {
+	for (int i = 0; i < serverNRecs; i++) { // Figure out first-largest server
 		str = (String) din.readLine();
 		System.out.println("RCVD: "+ str);
 
@@ -66,7 +66,9 @@ try{
 
 			nServerCount = 0;
 		} else {
-			nServerCount++;
+			if (currentServer[0].equals(biggestServerName)) {
+				nServerCount++;
+			}
 		}
 		
 
@@ -88,15 +90,21 @@ try{
 
 
 	String[] jobOutput;
-	String redyJobStatus = ""; // Either JOBN, JCPL or NONE
+
 	int serverCounter = 0;
 
-	while (jobInfo[0].equals("NONE") == false) {
+	while (jobInfo[0].equals("NONE") == false) { // Assigning jobs until NONE
 		if (jobInfo[0].equals("JOBN")) {
 			dout.write(("SCHD "+jobInfo[2]+ " "+biggestServerName+" "+serverCounter+"\n").getBytes()); // receive job
 			System.out.println("SENT:  SCHD "+jobInfo[2]+ " "+biggestServerName+" "+serverCounter);
 			str = (String) din.readLine();
 			System.out.println("RCVD: "+ str);
+
+			if (serverCounter == nServerCount) {
+			serverCounter = 0;
+			} else {
+				serverCounter++;
+			}
 		}
 
 		dout.write(("REDY\n").getBytes());
@@ -108,11 +116,7 @@ try{
 
 		jobInfo = str.split(" ");
 
-		if (serverCounter == nServerCount) {
-			serverCounter = 0;
-		} else {
-			serverCounter++;
-		}
+	
 	}
 
 	dout.write(("QUIT\n").getBytes());
