@@ -17,3 +17,5 @@
 
 1. Run ds-simulator server `$ ds-server -c [config file path] -n -v brief
 2. Run java client `$ java client.java`
+
+## Running stage 2 Demo of client
