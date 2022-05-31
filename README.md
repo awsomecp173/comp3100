@@ -1,4 +1,4 @@
-# COMP3100 - Stage 1
+# COMP3100 - Stage 2
 
 
 ## By Andrew Tjandra; Student ID: 46451242
