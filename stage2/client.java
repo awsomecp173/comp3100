@@ -83,17 +83,16 @@ public class client {
 	
 	public static String read() throws IOException {
 		String str = (String) din.readLine();
-
         System.out.println("RCVD : " + str);
 
         return str;
 	}
 
 	public static void send(String message) throws IOException {
-		String msg = message + "\n";
-		dout.write(msg.getBytes());
+		dout.write((message + "\n").getBytes());
 		dout.flush();
-		System.out.println("SENT : " + msg);
+		System.out.println("SENT : " + (message + "\n"));
+		
 		return;
 	
 	}
