@@ -20,16 +20,19 @@ public class client {
 			while (true) {
 				send("REDY");
 
-				String str = read();
 
-		
-				job = str.split(" ");
+				job = read().split(" ");
 
 
 				while(job[0].equals("JCPL")){
 					send("REDY");
 					job = read().split(" ");
 				}
+
+				if (job[0].equals("NONE")) {
+					break;
+				}
+
 
 				int jobID = Integer.parseInt(job[2]);
 				int jobCore = Integer.parseInt(job[4]);
@@ -69,7 +72,7 @@ public class client {
 
 			}
 
-
+			quit();
 
 
 
@@ -107,9 +110,9 @@ public class client {
 
         System.out.println("RCVD : " + str);
 
-        if (str.equals("NONE")) {
+      /*  if (str.equals("NONE")) {
         	quit();
-        }
+        }*/
 
         return str;
 	}
