@@ -18,7 +18,12 @@ public class client {
 				
 				String[] job = read().split(" ");
 
-				
+				int jobID = Integer.parseInt(job[2]);
+				int jobCore = Integer.parseInt(job[4]);
+				int jobMem = Integer.parseInt(job[5]);
+				int jobDisk = Integer.parseInt(job[6]);
+
+				send("GETS Avail "+ jobCore + " " + jobMem + " " + jobDisk);
 
 			}
 
