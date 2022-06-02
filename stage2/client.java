@@ -6,17 +6,30 @@ public class client {
 	public static Socket socket;
 	public static DataOutputStream dout;
 	public static BufferedReader din;
-	public static String[] servers;
-	public static String lastMsg;
+	public static String[][] servers;
+	public static String[] job;
+	public static boolean notQuit;
 
 
 	public static void main(String[] args) {
 		try {
+			notQuit = true;
+
 			connect("127.0.0.1", 50000);
 			
-			while (!lastMsg.equals("NONE")) {
-				
-				String[] job = read().split(" ");
+			while (true) {
+				send("REDY");
+
+				String str = read();
+
+		
+				job = str.split(" ");
+
+
+				while(job[0].equals("JCPL")){
+					send("REDY");
+					job = read().split(" ");
+				}
 
 				int jobID = Integer.parseInt(job[2]);
 				int jobCore = Integer.parseInt(job[4]);
@@ -24,12 +37,40 @@ public class client {
 				int jobDisk = Integer.parseInt(job[6]);
 
 				send("GETS Avail "+ jobCore + " " + jobMem + " " + jobDisk);
+				String serverN = read().split(" ")[1];
+
+				if (serverN.equals("0")) {
+					send("OK");
+					read();
+					send("GETS Capable "+ jobCore + " " + jobMem + " " + jobDisk);
+
+					serverN = read().split(" ")[1];
+				}
+
+				System.out.println("Number of Servers from GETS: " +serverN);
+
+				send("OK");
+
+				servers = new String[Integer.parseInt(serverN)][9];
+
+				for (int i = 0; i < Integer.parseInt(serverN); i++) {
+					servers[i] = read().split(" ");
+				}
+
+				send("OK");
+
+				read();
+
+				send("SCHD "+jobID+ " " +servers[0][0] + " " + servers[0][1]);
+
+				read();
+				
+
 
 			}
 
 
 
-			quit();
 
 
 
@@ -52,7 +93,6 @@ public class client {
 			read();
 			send("AUTH " + System.getProperty("user.name"));
 			read();
-			send("REDY");
 
 
 		} catch (Exception e) {
@@ -65,8 +105,12 @@ public class client {
 	public static String read() throws IOException {
 		String str = (String) din.readLine();
 
-		lastMsg = str;
         System.out.println("RCVD : " + str);
+
+        if (str.equals("NONE")) {
+        	quit();
+        }
+
         return str;
 	}
 
@@ -84,6 +128,9 @@ public class client {
 
 	public static void quit() {
 		try {
+			notQuit = false;
+
+			System.out.println("QUITTING!");
 			send("QUIT");
 			read();
 
