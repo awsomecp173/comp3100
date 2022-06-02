@@ -1,6 +1,8 @@
+//COMP3100 Stage 2 By Andrew Tjandra
+//Student ID: 46451242
+
 import java.io.*;
 import java.net.*;
-import java.util.*;
 
 public class client {
 	public static Socket socket;
@@ -8,44 +10,41 @@ public class client {
 	public static BufferedReader din;
 	public static String[][] servers;
 	public static String[] job;
-	public static boolean notQuit;
 
 
 	public static void main(String[] args) {
 		try {
-			notQuit = true;
+			socket = new Socket("localhost", 50000);
 
-			connect("127.0.0.1", 50000);
+			dout = new DataOutputStream(socket.getOutputStream()); // Must write newline to every dataoutputstream
+			din = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			send("HELO"); // Three-way handshake
+			read();
+			send("AUTH " + System.getProperty("user.name"));
+			read();
 			
 			while (true) {
 				send("REDY");
 
+				job = read().split(" "); // JOBN submitTime jobID estRuntime core memory disk
 
-				job = read().split(" ");
-
-
-				while(job[0].equals("JCPL")){
+				while(job[0].equals("JCPL")){ // Ignore JCPL until next JOBN or NONE
 					send("REDY");
 					job = read().split(" ");
 				}
 
-				if (job[0].equals("NONE")) {
+				if (job[0].equals("NONE")) { //If NONE is received then Quit
 					break;
 				}
 
-
-				int jobID = Integer.parseInt(job[2]);
-				int jobCore = Integer.parseInt(job[4]);
-				int jobMem = Integer.parseInt(job[5]);
-				int jobDisk = Integer.parseInt(job[6]);
-
-				send("GETS Avail "+ jobCore + " " + jobMem + " " + jobDisk);
+				send("GETS Avail "+ job[4] + " " + job[5] + " " + job[6]);
 				String serverN = read().split(" ")[1];
 
 				if (serverN.equals("0")) {
 					send("OK");
 					read();
-					send("GETS Capable "+ jobCore + " " + jobMem + " " + jobDisk);
+					send("GETS Capable "+ job[4] + " " + job[5] + " " + job[6]);
 
 					serverN = read().split(" ")[1];
 				}
@@ -54,28 +53,25 @@ public class client {
 
 				send("OK");
 
-				servers = new String[Integer.parseInt(serverN)][9];
+				servers = new String[Integer.parseInt(serverN)][9]; //Values: serverType serverID state curStartTime core memory disk #wJobs #rJobs
 
 				for (int i = 0; i < Integer.parseInt(serverN); i++) {
 					servers[i] = read().split(" ");
 				}
 
 				send("OK");
-
 				read();
-
-				send("SCHD "+jobID+ " " +servers[0][0] + " " + servers[0][1]);
-
-				read();
-				
-
+				send("SCHD "+job[2]+ " " +servers[0][0] + " " + servers[0][1]);
+				read();				
 
 			}
 
-			quit();
+			send("QUIT"); // Quitting process
+			read();
 
-
-
+            dout.flush();
+            din.close();
+            socket.close();
 
 		} catch (Exception e) {
 			System.out.println("Exception catched: " + e);
@@ -84,66 +80,22 @@ public class client {
 
 	}
 
-	public static void connect(String host, Integer port) { // connect and perform three-way handshake
-
-		try {
-			socket = new Socket(host, port);
-
-			dout = new DataOutputStream(socket.getOutputStream()); // Must write newline to every dataoutputstream
-			din = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-			send("HELO");
-			read();
-			send("AUTH " + System.getProperty("user.name"));
-			read();
-
-
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-
-
-	}
-
+	
 	public static String read() throws IOException {
 		String str = (String) din.readLine();
 
         System.out.println("RCVD : " + str);
 
-      /*  if (str.equals("NONE")) {
-        	quit();
-        }*/
-
         return str;
 	}
 
 	public static void send(String message) throws IOException {
-		try {
-			String msg = message + "\n";
-			dout.write(msg.getBytes());
-			dout.flush();
-			System.out.println("SENT : " + msg);
-			return;
-		} catch (Exception e){
-			System.out.println("Something Wrong");
-		}
+		String msg = message + "\n";
+		dout.write(msg.getBytes());
+		dout.flush();
+		System.out.println("SENT : " + msg);
+		return;
+	
 	}
-
-	public static void quit() {
-		try {
-			notQuit = false;
-
-			System.out.println("QUITTING!");
-			send("QUIT");
-			read();
-
-            dout.flush();
-            din.close();
-            socket.close();
-        } catch (Exception e){
-            System.out.println(e);
-        }
-	}
-
 
 }
